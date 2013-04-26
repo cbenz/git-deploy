@@ -122,6 +122,9 @@ def run_command(args):
         return 1
     log.debug(u'run_command conf: {}'.format(conf))
     repo_alias, repo_conf = get_repo_conf(conf, repo_url)
+    if not repo_conf:
+        log.error(u'No configuration found for this repository.')
+        return 1
     log.debug(u'run_command repo_alias: {}'.format(repo_alias))
     log.debug(u'run_command repo_conf: {}'.format(repo_conf))
     command_kwargs = {
