@@ -1,0 +1,47 @@
+{
+  "hooks": {
+    "reload_apache": {
+      "command": "service apache2 force-reload",
+      "user": "root"
+    }
+  },
+  "repositories": {
+    "project_1": {
+      "hosts": {
+        "amy": {
+          "hooks": { "after": [ "reload_apache" ] },
+          "path": "deps/project_1",
+          "user": "user_1"
+        },
+        "howard": {
+          "hooks": { "after": [ "reload_apache" ] },
+          "path": "application",
+          "user": "user_2"
+        },
+        "leslie": {
+          "hooks": { "after": [ "reload_apache" ] },
+          "path": "deps/project_1",
+          "user": "user_1"
+        }
+      },
+      "targets": {
+        "preprod": { "leslie": "origin" },
+        "prod": { "amy": "amy", "howard": "origin" }
+      },
+      "url": "git@git.my.domain:project_1.git"
+    },
+    "project_1_vhost": {
+      "hosts": {
+        "howard": {
+          "hooks": { "after": [ "reload_apache" ] },
+          "path": "vhost",
+          "user": "user_1"
+        }
+      },
+      "targets": {
+        "prod": { "remotes": [ "origin" ], "hosts": [ "howard" ] }
+      },
+      "url": "git@git.my.domain:vhosts/project_1.my.domain.git"
+    }
+  }
+}
