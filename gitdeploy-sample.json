@@ -39,7 +39,7 @@
         }
       },
       "targets": {
-        "prod": { "remotes": [ "origin" ], "hosts": [ "howard" ] }
+        "prod": { "amy": "amy", "howard": "origin" }
       },
       "url": "git@git.my.domain:vhosts/project_1.my.domain.git"
     }
