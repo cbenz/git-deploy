@@ -58,11 +58,11 @@ def get_conf(config_dir_path):
     return conf
 
 
-def get_repo_conf(conf, repo_url):
+def get_repo_alias_and_conf(conf, repo_url):
     if conf['repositories']:
         for repo_alias, repo_conf in conf['repositories'].iteritems():
             if repo_conf['url'] == repo_url:
-                log.debug(u'get_repo_conf: repo_alias = {}, repo_conf = {}'.format(repo_alias, repo_conf))
+                log.debug(u'get_repo_alias_and_conf: repo_alias = {}, repo_conf = {}'.format(repo_alias, repo_conf))
                 return repo_alias, repo_conf
     return None, None
 

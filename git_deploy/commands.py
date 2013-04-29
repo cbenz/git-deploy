@@ -60,7 +60,7 @@ def run_command(args):
     if not conf:
         log.error(u'Could not load configuration from directory "{}".'.format(args.config_dir))
         return 1
-    repo_alias, repo_conf = configuration.get_repo_conf(conf, repo_url)
+    repo_alias, repo_conf = configuration.get_repo_alias_and_conf(conf, repo_url)
     if not repo_conf:
         log.error(u'This repository is not managed by git-deploy. '
             'Hint: add its configuration to a JSON file in {}'.format(args.config_dir))
