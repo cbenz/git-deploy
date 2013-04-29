@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-"""git-deploy: deploy git repository changes to targets."""
+"""Deploy git repositories to multiple targets."""
 
 
 from setuptools import setup, find_packages

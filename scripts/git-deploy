@@ -14,7 +14,7 @@ log = logging.getLogger(os.path.basename(__file__))
 
 
 def main():
-    parser = argparse.ArgumentParser(description=u'Deploy git repository changes to targets.')
+    parser = argparse.ArgumentParser(description=u'Deploy git repositories to multiple targets.')
     parser.add_argument('--config-file', default='~/.gitdeploy.json', help=u'Path of the config file')
     parser.add_argument('--origin-remote-name', default='origin', help=u'Name of the main remote repository')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help=u'Display info messages')
