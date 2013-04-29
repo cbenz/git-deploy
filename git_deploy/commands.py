@@ -5,10 +5,23 @@ import logging
 import os
 import subprocess
 
-from . import configuration, conv, repository
+from . import configuration, repository
 
 
 log = logging.getLogger(os.path.basename(__file__))
+
+
+def get_targets_conf(repo_conf, target_names):
+    u'''
+    Ensure that target name given by user belongs to targets declared in repository configuration.
+    '''
+    for target_name in target_names:
+        if target_name not in repo_conf['targets']:
+            log.error(u'Invalid target name (repository targets: {})'.format(u', '.join(repo_conf['targets'].keys())))
+            return None
+    targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in target_names}
+    log.debug(u'get_targets_conf: targets_conf = {}'.format(targets_conf))
+    return targets_conf
 
 
 def run_command(args):
@@ -32,6 +45,7 @@ def run_command(args):
     command_kwargs = {
         'args': args,
         'conf': conf,
+        'repo': repo,
         'repo_alias': repo_alias,
         'repo_conf': repo_conf,
         'repo_url': repo_url,
@@ -60,12 +74,12 @@ def run_hooks(dry_run, hooks, hooks_conf, host_name):
     return 0
 
 
-def run_pull_command(args, conf, repo_alias, repo_conf, repo_url):
+def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
     if args.dry_run:
         log.info(u'Dry-run mode!')
-    targets_conf, errors = conv.make_inputs_to_targets_conf(repo_conf=repo_conf)(args.targets)
-    if errors is not None:
-        log.error(u', '.join(u'{}: {}' for target_name, error in errors.iteritems))
+    targets_conf = repo_conf['targets'] if 'all' in args.targets else \
+        get_targets_conf(repo_conf=repo_conf, target_names=args.targets)
+    if targets_conf is None:
         return 1
     targets_host_names = []
     for target_name, target_conf in targets_conf.iteritems():
@@ -78,7 +92,7 @@ def run_pull_command(args, conf, repo_alias, repo_conf, repo_url):
         log.info(u'== pull from host "{}"'.format(host_name))
         host_conf = repo_conf['hosts'].get(host_name)
         if not host_conf:
-            log.error(u'Host "{}" not globally-configured (repository "{}").'.format(host_name, repo_alias))
+            log.error(u'Host "{}" not configured (repository "{}").'.format(host_name, repo_alias))
             return 1
         # before hooks
         if host_conf['hooks']['before']:
@@ -102,24 +116,26 @@ def run_pull_command(args, conf, repo_alias, repo_conf, repo_url):
     return 0
 
 
-def run_push_command(args, conf, repo_alias, repo_conf, repo_url):
+def run_push_command(args, conf, repo, repo_alias, repo_conf, repo_url):
     if args.dry_run:
         log.info(u'Dry-run mode!')
-    targets_conf, errors = conv.make_inputs_to_targets_conf(repo_conf=repo_conf)(args.targets)
-    if errors is not None:
-        log.error(u', '.join(u'{}: {}' for target_name, error in errors.iteritems))
-        return 1
-    remotes = []
-    for target_name, target_conf in targets_conf.iteritems():
-        if not target_conf:
-            log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
+    if 'all' in args.targets:
+        remotes = [remote.name for remote in repo.remotes]
+    else:
+        targets_conf = get_targets_conf(repo_conf=repo_conf, target_names=args.targets)
+        if targets_conf is None:
             return 1
-        remotes.extend(target_conf.values())
-    remotes = sorted(set(remotes))
+        remotes = []
+        for target_name, target_conf in targets_conf.iteritems():
+            if not target_conf:
+                log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
+                return 1
+            remotes.extend(target_conf.values())
+        remotes = sorted(set(remotes))
     return repository.push(dry_run=args.dry_run, remotes=remotes)
 
 
-def run_targets_command(args, conf, repo_alias, repo_conf, repo_url):
+def run_targets_command(args, conf, repo, repo_alias, repo_conf, repo_url):
     targets = repo_conf.get('targets')
     if not targets:
         log.error(u'Targets are not configured (repository "{}").'.format(repo_alias))

@@ -27,7 +27,9 @@ def pull(host_name, repo_conf, dry_run=False):
     command_args = ['ssh']
     if host_conf['user']:
         command_args.extend(['-l', host_conf['user']])
-    command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], repo_conf['commands']['pull'])])
+    pull_command = repo_conf['commands']['pull'] if repo_conf['commands'] and repo_conf['commands'].get('pull') \
+        else u'git pull'
+    command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], pull_command)])
     log.info(u'= command: {}'.format(u' '.join(command_args)))
     if not dry_run:
         return_code = subprocess.call(command_args)
