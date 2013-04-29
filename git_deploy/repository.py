@@ -22,11 +22,12 @@ def get_repo_url(repo, origin_remote_name):
     return repo.remotes[origin_remote_name].config_reader.config.get('remote "{}"'.format(origin_remote_name), 'url')
 
 
-def pull(host_conf, host_name, dry_run=False):
+def pull(host_name, repo_conf, dry_run=False):
+    host_conf = repo_conf['hosts'][host_name]
     command_args = ['ssh']
     if host_conf['user']:
         command_args.extend(['-l', host_conf['user']])
-    command_args.extend([host_name, 'cd {}; git pull'.format(host_conf['path'])])
+    command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], repo_conf['commands']['pull'])])
     log.info(u'= command: {}'.format(u' '.join(command_args)))
     if not dry_run:
         return_code = subprocess.call(command_args)

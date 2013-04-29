@@ -88,7 +88,7 @@ def run_pull_command(args, conf, repo_alias, repo_conf, repo_url):
                 log.error(u'Error running command, exit.')
                 return return_code
         # pull command
-        return_code = repository.pull(dry_run=args.dry_run, host_conf=host_conf, host_name=host_name)
+        return_code = repository.pull(dry_run=args.dry_run, host_name=host_name, repo_conf=repo_conf)
         if return_code != 0:
             log.error(u'Error running command, exit.')
             return return_code

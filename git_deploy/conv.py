@@ -4,7 +4,7 @@
 import logging
 import os
 
-from biryani1.baseconv import empty_to_none, not_none, pipe, test_in, struct, uniform_mapping, uniform_sequence
+from biryani1.baseconv import default, empty_to_none, not_none, pipe, test_in, struct, uniform_mapping, uniform_sequence
 
 
 log = logging.getLogger(os.path.basename(__file__))
@@ -14,6 +14,12 @@ log = logging.getLogger(os.path.basename(__file__))
 
 json_values_to_repository_conf = struct(
     {
+        'commands': struct(
+            {
+                'pull': default('git pull'),
+                },
+            drop_none_values=False,
+            ),
         'hosts': uniform_mapping(
             pipe(empty_to_none, not_none),
             struct(
