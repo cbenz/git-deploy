@@ -3,70 +3,14 @@
 
 
 import argparse
-import json
 import logging
 import os
-import subprocess
 import sys
 
-import dulwich
-
-from git_deploy import conv
+from git_deploy import commands
 
 
 log = logging.getLogger(os.path.basename(__file__))
-
-
-def get_conf(config_file_path):
-    if not os.path.isfile(config_file_path):
-        return None
-    with open(config_file_path) as config_file:
-        config_str = config_file.read()
-    json_conf = json.loads(config_str)
-    conf, errors = conv.json_values_to_conf(json_conf)
-    if errors is not None:
-        log.error(u'Repository configuration errors: {}'.format(errors))
-        return None
-    return conf
-
-
-def get_remotes(repo):
-    if repo is None:
-        return None
-    repo_config = repo.get_config()
-    return {
-        key[1]: value['url']
-        for key, value in repo_config._values.iteritems()
-        if 'remote' in key
-        }
-
-
-def get_repo():
-    repo_root_dir_path = get_repo_root_dir_path()
-    if repo_root_dir_path is None:
-        return None
-    try:
-        repo = dulwich.repo.Repo(root=repo_root_dir_path)
-    except dulwich.errors.NotGitRepository:
-        return None
-    return repo
-
-
-def get_repo_conf(conf, repo_url):
-    if conf['repositories']:
-        for repo_alias, repo_conf in conf['repositories'].iteritems():
-            if repo_conf['url'] == repo_url:
-                return repo_alias, repo_conf
-    return None, None
-
-
-def get_repo_root_dir_path():
-    current_dir_path = os.getcwd()
-    while not os.path.isdir(os.path.join(current_dir_path, '.git')):
-        current_dir_path = os.path.abspath(os.path.join(current_dir_path, os.path.pardir))
-        if current_dir_path == '/':
-            return None
-    return current_dir_path
 
 
 def main():
@@ -86,155 +30,11 @@ def main():
     targets_parser = subparsers.add_parser(u'targets')
     targets_parser.set_defaults(command=u'targets')
     args = parser.parse_args()
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
-    return run_command(args)
-
-
-def parse_targets(targets, repo_conf):
-    if 'all' in targets:
-        targets = repo_conf['targets']
-    else:
-        for target in targets:
-            if target not in repo_conf['targets']:
-                log.error(u'"{}" is not a valid target (repository targets: {})'.format(
-                    target, u', '.join(repo_conf['targets'].keys())))
-                return None
-        targets = {target_name: repo_conf['targets'][target_name] for target_name in targets}
-    log.debug(u'parse_targets targets: {}'.format(targets))
-    return targets
-
-
-def run_command(args):
-    log.debug(u'run_command args: {}'.format(args))
-    repo = get_repo()
-    if repo is None:
-        log.error(u'Not a git repository (sub-)directory.')
-        return 1
-    remotes = get_remotes(repo=repo)
-    repo_url = remotes.get(args.origin_remote_name)
-    if not repo_url:
-        log.error(u'"{}" is not a valid remote name for this repository.'.format(args.origin_remote_name))
-        return 1
-    config_file_path = os.path.abspath(os.path.expanduser(args.config_file))
-    conf = get_conf(config_file_path=config_file_path)
-    if not conf:
-        log.error(u'Could not load configuration from file "{}".'.format(config_file_path))
-        return 1
-    log.debug(u'run_command conf: {}'.format(conf))
-    repo_alias, repo_conf = get_repo_conf(conf, repo_url)
-    if not repo_conf:
-        log.error(u'No configuration found for this repository.')
-        return 1
-    log.debug(u'run_command repo_alias: {}'.format(repo_alias))
-    log.debug(u'run_command repo_conf: {}'.format(repo_conf))
-    command_kwargs = {
-        'args': args,
-        'conf': conf,
-        'repo_alias': repo_alias,
-        'repo_conf': repo_conf,
-        'repo_url': repo_url,
-        }
-    if args.command == 'pull':
-        return run_pull_command(**command_kwargs)
-    elif args.command == 'push':
-        return run_push_command(**command_kwargs)
-    elif args.command == 'targets':
-        return run_targets_command(**command_kwargs)
-    assert False, u'Should never reach this line.'
-
-
-def run_hooks(dry_run, hooks, hooks_conf, host_name):
-    for hook_name in hooks:
-        hook_conf = hooks_conf[hook_name]
-        command_args = ['ssh', host_name]
-        if hook_conf['user']:
-            command_args.extend(['-l', hook_conf['user']])
-        command_args.append(hook_conf['command'])
-        log.info(u'= command ("after" hook): {}'.format(u' '.join(command_args)))
-        if not dry_run:
-            return_code = subprocess.call(command_args)
-            if return_code != 0:
-                return return_code
-    return 0
-
-
-def run_pull_command(args, conf, repo_alias, repo_conf, repo_url):
-    if args.dry_run:
-        log.info(u'Dry-run mode!')
-    targets = parse_targets(targets=args.targets, repo_conf=repo_conf)
-    if not targets:
-        return 1
-    targets_host_names = []
-    for target_name, target_conf in targets.iteritems():
-        if not target_conf:
-            log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
-            return 1
-        targets_host_names.extend(target_conf.keys())
-    targets_host_names = sorted(set(targets_host_names))
-    for host_name in targets_host_names:
-        log.info(u'== host "{}"'.format(host_name))
-        host_conf = repo_conf['hosts'].get(host_name)
-        if not host_conf:
-            log.error(u'Host "{}" not globally-configured (repository "{}").'.format(host_name, repo_alias))
-            return 1
-        # before hooks
-        if host_conf['hooks']['before']:
-            return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'],
-                host_name=host_name)
-            if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
-        # pull command
-        command_args = ['ssh']
-        if host_conf['user']:
-            command_args.extend(['-l', host_conf['user']])
-        command_args.extend([host_name, 'cd {}; git pull'.format(host_conf['path'])])
-        log.info(u'= command: {}'.format(u' '.join(command_args)))
-        if not args.dry_run:
-            return_code = subprocess.call(command_args)
-            if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
-        # after hooks
-        if host_conf['hooks']['after']:
-            return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'],
-                host_name=host_name)
-            if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
-    return 0
-
-
-def run_push_command(args, conf, repo_alias, repo_conf, repo_url):
-    if args.dry_run:
-        log.info(u'Dry-run mode!')
-    targets = parse_targets(targets=args.targets, repo_conf=repo_conf)
-    remotes = []
-    for target_name, target_conf in targets.iteritems():
-        if not target_conf:
-            log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
-            return 1
-        remotes.extend(target_conf.values())
-    remotes = sorted(set(remotes))
-    for remote in remotes:
-        log.info(u'== remote "{}"'.format(remote))
-        command_args = ['git', 'push', remote]
-        log.info(u'command: {}'.format(u' '.join(command_args)))
-        if not args.dry_run:
-            return_code = subprocess.call(command_args)
-            if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
-    return 0
-
-
-def run_targets_command(args, conf, repo_alias, repo_conf, repo_url):
-    targets = repo_conf.get('targets')
-    if not targets:
-        log.error(u'Targets not configured (repository "{}").'.format(repo_alias))
-        return 1
-    log.info(u'Targets: <all>, {} (repository "{}")'.format(u', '.join(targets.keys()), repo_alias))
-    return 0
+    logging.basicConfig(
+        format=logging.BASIC_FORMAT if args.verbose else '%(message)s',
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        )
+    return commands.run_command(args)
 
 
 if __name__ == '__main__':

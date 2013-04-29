@@ -18,7 +18,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'Biryani1 >= 0.9dev',
-        'dulwich >= 0.8.5',
+        'GitPython >= 0.3.2',
         ],
     keywords='git deploy targets remotes ssh',
     license=u'http://www.fsf.org/licensing/licenses/agpl-3.0.html',

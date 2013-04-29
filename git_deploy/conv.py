@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
+import logging
+import os
+
 from biryani1.baseconv import empty_to_none, not_none, pipe, test_in, struct, uniform_mapping, uniform_sequence
+
+
+log = logging.getLogger(os.path.basename(__file__))
 
 
 # Level 1 converters.
@@ -47,6 +53,30 @@ json_values_to_project_conf = struct(
         },
     drop_none_values=False,
     )
+
+
+def make_inputs_to_targets_conf(repo_conf):
+    def inputs_to_targets_conf(values, state=None):
+        u'''
+        Ensure that target name given by user belongs to targets declared in repository configuration.
+        Then resolves special target "all" to real target names.
+        '''
+        if values is None:
+            return None, None
+        if 'all' in values:
+            return repo_conf['targets'], None
+        else:
+            errors = {}
+            for target_name in values:
+                if target_name not in repo_conf['targets']:
+                    errors[target_name] = u'Invalid target name (repository targets: {})'.format(
+                        u', '.join(repo_conf['targets'].keys()))
+            if errors:
+                return values, errors
+            targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in values}
+            log.debug(u'str_to_targets_conf: targets_conf = {}'.format(targets_conf))
+            return targets_conf
+    return inputs_to_targets_conf
 
 
 # Level 2 converters.
