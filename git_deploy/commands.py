@@ -33,19 +33,6 @@ from . import configuration, repository
 log = logging.getLogger(os.path.basename(__file__))
 
 
-def get_targets_conf(repo_conf, target_names):
-    u'''
-    Ensure that target name given by user belongs to targets declared in repository configuration.
-    '''
-    for target_name in target_names:
-        if target_name not in repo_conf['targets']:
-            log.error(u'Invalid target name (repository targets: {})'.format(u', '.join(repo_conf['targets'].keys())))
-            return None
-    targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in target_names}
-    log.debug(u'get_targets_conf: targets_conf = {}'.format(targets_conf))
-    return targets_conf
-
-
 def run_command(args):
     log.debug(u'run_command: args = {}'.format(args))
     repo = repository.get_repo()
@@ -100,9 +87,13 @@ def run_hooks(dry_run, hooks, hooks_conf, host_name):
 def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
     if args.dry_run:
         log.info(u'Dry-run mode!')
+    if any(target_name not in repo_conf['targets'] for target_name in args.targets if target_name != 'all'):
+        log.error(u'Invalid target name (repository targets: {})'.format(u', '.join(repo_conf['targets'].keys())))
+        return 1
     targets_conf = repo_conf['targets'] if 'all' in args.targets else \
-        get_targets_conf(repo_conf=repo_conf, target_names=args.targets)
-    if targets_conf is None:
+        {target_name: repo_conf['targets'][target_name] for target_name in args.targets}
+    if not targets_conf:
+        log.error(u'No targets configured (repository "{}")'.format(repo_alias))
         return 1
     targets_host_names = []
     for target_name, target_conf in targets_conf.iteritems():
@@ -142,11 +133,16 @@ def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
 def run_push_command(args, conf, repo, repo_alias, repo_conf, repo_url):
     if args.dry_run:
         log.info(u'Dry-run mode!')
+    if any(target_name not in repo_conf['targets'] for target_name in args.targets if target_name != 'all'):
+        log.error(u'Invalid target name (repository targets: {})'.format(u', '.join(repo_conf['targets'].keys())))
+        return 1
     if 'all' in args.targets:
         remotes = [remote.name for remote in repo.remotes]
     else:
-        targets_conf = get_targets_conf(repo_conf=repo_conf, target_names=args.targets)
-        if targets_conf is None:
+        # Build remotes from repo targets.
+        targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in args.targets}
+        if not targets_conf:
+            log.error(u'No targets configured (repository "{}")'.format(repo_alias))
             return 1
         remotes = []
         for target_name, target_conf in targets_conf.iteritems():
