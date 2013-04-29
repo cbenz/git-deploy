@@ -12,7 +12,7 @@ log = logging.getLogger(os.path.basename(__file__))
 
 # Level 1 converters.
 
-json_values_to_project_conf = struct(
+json_values_to_repository_conf = struct(
     {
         'hosts': uniform_mapping(
             pipe(empty_to_none, not_none),
@@ -95,7 +95,7 @@ json_values_to_conf = struct(
             ),
         'repositories': uniform_mapping(
             pipe(empty_to_none, not_none),
-            json_values_to_project_conf,
+            json_values_to_repository_conf,
             ),
         },
     drop_none_values=True,
