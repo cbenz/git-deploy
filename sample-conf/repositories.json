@@ -1,10 +1,4 @@
 {
-  "hooks": {
-    "reload_apache": {
-      "command": "service apache2 force-reload",
-      "user": "root"
-    }
-  },
   "repositories": {
     "project_1": {
       "hosts": {
