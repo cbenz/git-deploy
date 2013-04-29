@@ -21,17 +21,14 @@ def run_command(args):
     if not repo_url:
         log.error(u'Remote "{}" not found in .git/config for this repository.'.format(args.origin_remote_name))
         return 1
-    config_file_path = os.path.abspath(os.path.expanduser(args.config_file))
-    conf = configuration.get_conf(config_file_path=config_file_path)
+    conf = configuration.get_conf(config_dir_path=args.config_dir)
     if not conf:
-        log.error(u'Could not load configuration from file "{}".'.format(config_file_path))
+        log.error(u'Could not load configuration from directory "{}".'.format(args.config_dir))
         return 1
-    log.debug(u'run_command: conf = {}'.format(conf))
     repo_alias, repo_conf = configuration.get_repo_conf(conf, repo_url)
     if not repo_conf:
         log.error(u'No configuration found for this repository.')
         return 1
-    log.debug(u'run_command: repo_alias = {}, repo_conf = {}'.format(repo_alias, repo_conf))
     command_kwargs = {
         'args': args,
         'conf': conf,

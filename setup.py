@@ -19,6 +19,7 @@ setup(
     install_requires=[
         'Biryani1 >= 0.9dev',
         'GitPython >= 0.3.2',
+        'pyxdg >= 0.19',
         ],
     keywords='git deploy targets remotes ssh',
     license=u'http://www.fsf.org/licensing/licenses/agpl-3.0.html',

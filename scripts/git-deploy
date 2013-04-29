@@ -8,14 +8,13 @@ import os
 import sys
 
 from git_deploy import commands
-
-
-log = logging.getLogger(os.path.basename(__file__))
+import xdg.BaseDirectory
 
 
 def main():
+    default_config_dir_path = os.path.join(xdg.BaseDirectory.xdg_config_home, 'git-deploy')
     parser = argparse.ArgumentParser(description=u'Deploy git repositories to multiple targets.')
-    parser.add_argument('--config-file', default='~/.gitdeploy.json', help=u'Path of the config file')
+    parser.add_argument('--config-dir', default=default_config_dir_path, help=u'Path of the config file')
     parser.add_argument('--origin-remote-name', default='origin', help=u'Name of the main remote repository')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help=u'Display info messages')
     subparsers = parser.add_subparsers(title=u'commands')
@@ -30,6 +29,7 @@ def main():
     targets_parser = subparsers.add_parser(u'targets')
     targets_parser.set_defaults(command=u'targets')
     args = parser.parse_args()
+    args.config_dir = os.path.abspath(os.path.expanduser(args.config_dir))
     logging.basicConfig(
         format=logging.BASIC_FORMAT if args.verbose else '%(message)s',
         level=logging.DEBUG if args.verbose else logging.INFO,

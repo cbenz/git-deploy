@@ -98,5 +98,5 @@ json_values_to_conf = struct(
             json_values_to_project_conf,
             ),
         },
-    drop_none_values=False,
+    drop_none_values=True,
     )
