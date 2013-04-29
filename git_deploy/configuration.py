@@ -20,7 +20,12 @@ def get_conf(config_dir_path):
         log.debug(u'get_conf: config_file_path = {}'.format(config_file_path))
         with open(config_file_path) as config_file:
             config_file_str = config_file.read()
-        config_file_json = json.loads(config_file_str)
+        try:
+            config_file_json = json.loads(config_file_str)
+        except ValueError, exc:
+            log.error(u'Failed to decode repository JSON configuration for file "{}": {}'.format(
+                config_file_path, unicode(exc)))
+            return None
         config_file_conf, errors = conv.json_values_to_conf(config_file_json)
         if errors is None:
             conf.update(config_file_conf)
