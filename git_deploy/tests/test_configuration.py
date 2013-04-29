@@ -30,6 +30,31 @@ from .. import configuration
 
 class TestSearch(unittest.TestCase):
     def setUp(self):
+        self.project_1_repo_url = 'git@git.my.domain:project_1.git'
+        self.project_1_conf = {
+            'hosts': {
+                'amy': {
+                    'hooks': {'after': ['reload_apache']},
+                    'path': 'deps/project_1',
+                    'user': 'user_1'
+                    },
+                'howard': {
+                    'hooks': {'after': ['reload_apache']},
+                    'path': 'application',
+                    'user': 'user_2'
+                    },
+                'leslie': {
+                    'hooks': {'after': ['reload_apache']},
+                    'path': 'deps/project_1',
+                    'user': 'user_1'
+                    }
+                },
+            'targets': {
+                'preprod': {'leslie': 'origin'},
+                'prod': {'amy': 'amy', 'howard': 'origin'}
+                },
+            'url': self.project_1_repo_url
+            }
         self.conf_dicts = [
             {
                 'hooks': {
@@ -49,30 +74,7 @@ class TestSearch(unittest.TestCase):
                 },
             {
                 'repositories': {
-                    'project_1': {
-                        'hosts': {
-                            'amy': {
-                                'hooks': {'after': ['reload_apache']},
-                                'path': 'deps/project_1',
-                                'user': 'user_1'
-                                },
-                            'howard': {
-                                'hooks': {'after': ['reload_apache']},
-                                'path': 'application',
-                                'user': 'user_2'
-                                },
-                            'leslie': {
-                                'hooks': {'after': ['reload_apache']},
-                                'path': 'deps/project_1',
-                                'user': 'user_1'
-                                }
-                            },
-                        'targets': {
-                            'preprod': {'leslie': 'origin'},
-                            'prod': {'amy': 'amy', 'howard': 'origin'}
-                            },
-                        'url': 'git@git.my.domain:project_1.git'
-                        },
+                    'project_1': self.project_1_conf,
                     },
                 },
             {
@@ -93,15 +95,20 @@ class TestSearch(unittest.TestCase):
                     },
                 },
             ]
+        self.conf = configuration.merge_conf_dicts(self.conf_dicts)
+
+    def test_get_repo_alias_and_conf(self):
+        repo_alias, repo_conf = configuration.get_repo_alias_and_conf(self.conf, self.project_1_repo_url)
+        self.assertEqual(repo_alias, 'project_1')
+        self.assertEqual(repo_conf, self.project_1_conf)
 
     def test_merge_conf_dicts(self):
-        conf = configuration.merge_conf_dicts(self.conf_dicts)
-        self.assertIn('hooks', conf)
-        self.assertIn('reload_apache', conf['hooks'])
-        self.assertIn('reload_apache_aspremont', conf['hooks'])
-        self.assertIn('repositories', conf)
-        self.assertIn('project_1', conf['repositories'])
-        self.assertIn('project_2', conf['repositories'])
+        self.assertIn('hooks', self.conf)
+        self.assertIn('reload_apache', self.conf['hooks'])
+        self.assertIn('reload_apache_aspremont', self.conf['hooks'])
+        self.assertIn('repositories', self.conf)
+        self.assertIn('project_1', self.conf['repositories'])
+        self.assertIn('project_2', self.conf['repositories'])
 
 
 if __name__ == '__main__':
