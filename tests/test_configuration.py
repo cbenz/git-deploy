@@ -32,6 +32,9 @@ class TestSearch(unittest.TestCase):
     def setUp(self):
         self.project_1_repo_url = 'git@git.my.domain:project_1.git'
         self.project_1_conf = {
+            'commands': {
+                'pull': 'git pull; make tests',
+                },
             'hosts': {
                 'amy': {
                     'hooks': {'after': ['reload_apache']},
@@ -109,6 +112,7 @@ class TestSearch(unittest.TestCase):
         self.assertIn('repositories', self.conf)
         self.assertIn('project_1', self.conf['repositories'])
         self.assertIn('project_2', self.conf['repositories'])
+        self.assertEqual(self.conf['repositories']['project_1']['commands']['pull'], 'git pull; make tests')
 
 
 if __name__ == '__main__':
