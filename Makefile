@@ -9,4 +9,4 @@ flake8:
 	flake8 --max-line-length=120 --ignore=E123,E128 git_deploy scripts/*
 
 tests:
-	nosetests
+	python -m unittest discover
