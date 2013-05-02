@@ -64,6 +64,11 @@ def run_command(args):
         return run_pull_command(**command_kwargs)
     elif args.command == 'push':
         return run_push_command(**command_kwargs)
+    elif args.command == 'sync':
+        return_code = run_push_command(**command_kwargs)
+        if return_code != 0:
+            return return_code
+        return run_pull_command(**command_kwargs)
     elif args.command == 'targets':
         return run_targets_command(**command_kwargs)
     assert False, u'Should never reach this line.'
