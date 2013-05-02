@@ -24,7 +24,6 @@
 
 
 import logging
-import os
 import subprocess
 
 from . import configuration, repository
