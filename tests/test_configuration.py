@@ -25,7 +25,7 @@
 
 import unittest
 
-from .. import configuration
+from git_deploy import configuration
 
 
 class TestSearch(unittest.TestCase):
