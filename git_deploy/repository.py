@@ -30,7 +30,7 @@ import subprocess
 import git
 
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 def get_repo():

@@ -30,7 +30,7 @@ import subprocess
 from . import configuration, repository
 
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 def run_command(args):

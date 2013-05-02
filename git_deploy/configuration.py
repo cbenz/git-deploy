@@ -31,7 +31,7 @@ import os
 from . import conv
 
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 def get_conf(config_dir_path):
