@@ -39,7 +39,7 @@ def get_conf(config_dir_path):
         return None
     conf_dicts = []
     for config_file_path in glob.iglob(os.path.join(config_dir_path, '*.json')):
-        log.debug(u'get_conf: config_file_path = {}'.format(config_file_path))
+        log.debug(u'config_file_path = {}'.format(config_file_path))
         with open(config_file_path) as config_file:
             config_file_str = config_file.read()
         try:
@@ -54,7 +54,7 @@ def get_conf(config_dir_path):
             return None
         conf_dicts.append(conf_data)
     conf = merge_conf_dicts(conf_dicts)
-    log.debug(u'get_conf: conf = {}'.format(conf))
+    log.debug(u'conf = {}'.format(conf))
     return conf
 
 
@@ -62,7 +62,7 @@ def get_repo_alias_and_conf(conf, repo_url):
     if conf['repositories']:
         for repo_alias, repo_conf in conf['repositories'].iteritems():
             if repo_conf['url'] == repo_url:
-                log.debug(u'get_repo_alias_and_conf: repo_alias = {}, repo_conf = {}'.format(repo_alias, repo_conf))
+                log.debug(u'repo_alias = {}, repo_conf = {}'.format(repo_alias, repo_conf))
                 return repo_alias, repo_conf
     return None, None
 
