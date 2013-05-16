@@ -117,20 +117,17 @@ def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
             return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'],
                 host_name=host_name)
             if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
+                log.error(u'Error running command.')
         # pull command
         return_code = repository.pull(dry_run=args.dry_run, host_name=host_name, repo_conf=repo_conf)
         if return_code != 0:
-            log.error(u'Error running command, exit.')
-            return return_code
+            log.error(u'Error running command.')
         # after hooks
         if host_conf['hooks']['after']:
             return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'],
                 host_name=host_name)
             if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
+                log.error(u'Error running command.')
     return 0
 
 
