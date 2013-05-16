@@ -113,7 +113,7 @@ def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
             log.error(u'Host "{}" not configured (repository "{}").'.format(host_name, repo_alias))
             return 1
         # before hooks
-        if host_conf['hooks']['before']:
+        if host_conf['hooks'] is not None and host_conf['hooks']['before']:
             return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'],
                 host_name=host_name)
             if return_code != 0:
@@ -123,7 +123,7 @@ def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
         if return_code != 0:
             log.error(u'Error running command.')
         # after hooks
-        if host_conf['hooks']['after']:
+        if host_conf['hooks'] is not None and host_conf['hooks']['after']:
             return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'],
                 host_name=host_name)
             if return_code != 0:
