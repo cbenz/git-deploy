@@ -56,7 +56,8 @@ def main():
     args = parser.parse_args()
     args.config_dir = os.path.abspath(os.path.expanduser(args.config_dir))
     logging.basicConfig(
-        format=logging.BASIC_FORMAT if args.verbose else '%(message)s',
+        format=u'%(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s:%(funcName)s line %(lineno)d] %(message)s'
+        if args.verbose else '%(message)s',
         level=logging.DEBUG if args.verbose else logging.INFO,
         )
     return commands.run_command(args)
