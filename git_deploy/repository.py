@@ -54,10 +54,7 @@ def pull(host_name, repo_conf, dry_run=False):
     command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], pull_command)])
     log.info(u'= command: {}'.format(u' '.join(command_args)))
     if not dry_run:
-        return_code = subprocess.call(command_args)
-        if return_code != 0:
-            log.error(u'Error running command, exit.')
-            return return_code
+        subprocess.call(command_args)
     return 0
 
 
@@ -69,8 +66,5 @@ def push(remotes=None, dry_run=False):
         command_args = ['git', 'push', remote]
         log.info(u'= command: {}'.format(u' '.join(command_args)))
         if not dry_run:
-            return_code = subprocess.call(command_args)
-            if return_code != 0:
-                log.error(u'Error running command, exit.')
-                return return_code
+            subprocess.call(command_args)
     return 0
