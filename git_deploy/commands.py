@@ -151,7 +151,8 @@ def run_push_command(args, conf, repo, repo_alias, repo_conf, repo_url):
                 log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
                 return 1
             remotes.extend(target_conf.values())
-        remotes = sorted(set(remotes))
+    remotes.append('origin')
+    remotes = sorted(set(remotes))
     return repository.push(dry_run=args.dry_run, remotes=remotes)
 
 
