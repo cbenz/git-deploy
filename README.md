@@ -10,35 +10,22 @@ remotely from multiple servers (via SSH).
 Also it provides hooks executed before and after pull (for ex. to reload Apache).
 
 
-Philosophy
-----------
-
-TODO
-
-
 Usage
 -----
 
-After configuring your git repositories, you'll be able to use the following sub-commands from a git repository:
-targets, pull, push, sync. The workflow is pretty basic: you push then you pull from/to a target.
-You can also use the 'sync' command to chain a push then a pull.
+After configuring your git repositories, git-deploy will push your changes to the repositories needed to be reached by
+given targets then it will pull from the server(s) corresponding to those targets.
 
-targets: get info about the current repository
+    $ git deploy <target>
 
-    $ git deploy targets
-    Targets: <all>, prod, preprod (repository "my-repositoy")
+Examples:
 
-push:
+    $ git deploy prod
+    $ git deploy all
 
-    $ git deploy push all
+Show repository config:
 
-pull:
-
-    $ git deploy pull all
-
-sync:
-
-    $ git deploy sync all
+    $ git deploy conf
 
 
 Installation

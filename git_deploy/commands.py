@@ -24,6 +24,7 @@
 
 
 import logging
+import pprint
 import subprocess
 
 from . import configuration, repository
@@ -52,25 +53,30 @@ def run_command(args):
             'Hint: add its configuration to a JSON file in {}'.format(args.config_dir))
         return 1
     command_kwargs = {
-        'args': args,
         'conf': conf,
+        'dry_run': args.dry_run,
         'repo': repo,
         'repo_alias': repo_alias,
         'repo_conf': repo_conf,
         'repo_url': repo_url,
         }
-    if args.command == 'pull':
+    command = args.sub_args[0]
+    if command == 'conf':
+        log.info(pprint.pformat(repo_conf))
+        return 0
+    elif command == 'pull':
+        command_kwargs['targets'] = args.sub_args[1:]
         return run_pull_command(**command_kwargs)
-    elif args.command == 'push':
+    elif command == 'push':
+        command_kwargs['targets'] = args.sub_args[1:]
         return run_push_command(**command_kwargs)
-    elif args.command == 'sync':
+    else:
+        # Sync command.
+        command_kwargs['targets'] = args.sub_args
         return_code = run_push_command(**command_kwargs)
         if return_code != 0:
             return return_code
         return run_pull_command(**command_kwargs)
-    elif args.command == 'targets':
-        return run_targets_command(**command_kwargs)
-    assert False, u'Should never reach this line.'
 
 
 def run_hooks(dry_run, hooks, hooks_conf, host_name):
@@ -88,14 +94,13 @@ def run_hooks(dry_run, hooks, hooks_conf, host_name):
     return 0
 
 
-def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
-    if args.dry_run:
+def run_pull_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targets):
+    if dry_run:
         log.info(u'Dry-run mode!')
-    if any(target_name not in repo_conf['targets'] for target_name in args.targets if target_name != 'all'):
-        log.error(u'Invalid target name (repository targets: {})'.format(u', '.join(repo_conf['targets'].keys())))
+    if not validate_targets(targets=targets, repo_targets=repo_conf['targets']):
         return 1
-    targets_conf = repo_conf['targets'] if 'all' in args.targets else \
-        {target_name: repo_conf['targets'][target_name] for target_name in args.targets}
+    targets_conf = repo_conf['targets'] if 'all' in targets else \
+        {target_name: repo_conf['targets'][target_name] for target_name in targets}
     if not targets_conf:
         log.error(u'No targets configured (repository "{}")'.format(repo_alias))
         return 1
@@ -114,34 +119,33 @@ def run_pull_command(args, conf, repo, repo_alias, repo_conf, repo_url):
             return 1
         # before hooks
         if host_conf['hooks'] is not None and host_conf['hooks']['before']:
-            return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'],
+            return_code = run_hooks(dry_run=dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'],
                 host_name=host_name)
             if return_code != 0:
                 log.error(u'Error running command.')
         # pull command
-        return_code = repository.pull(dry_run=args.dry_run, host_name=host_name, repo_conf=repo_conf)
+        return_code = repository.pull(dry_run=dry_run, host_name=host_name, repo_conf=repo_conf)
         if return_code != 0:
             log.error(u'Error running command.')
         # after hooks
         if host_conf['hooks'] is not None and host_conf['hooks']['after']:
-            return_code = run_hooks(dry_run=args.dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'],
+            return_code = run_hooks(dry_run=dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'],
                 host_name=host_name)
             if return_code != 0:
                 log.error(u'Error running command.')
     return 0
 
 
-def run_push_command(args, conf, repo, repo_alias, repo_conf, repo_url):
-    if args.dry_run:
+def run_push_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targets):
+    if dry_run:
         log.info(u'Dry-run mode!')
-    if any(target_name not in repo_conf['targets'] for target_name in args.targets if target_name != 'all'):
-        log.error(u'Invalid target name (repository targets: {})'.format(u', '.join(repo_conf['targets'].keys())))
+    if not validate_targets(targets=targets, repo_targets=repo_conf['targets']):
         return 1
-    if 'all' in args.targets:
+    if 'all' in targets:
         remotes = [remote.name for remote in repo.remotes]
     else:
         # Build remotes from repo targets.
-        targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in args.targets}
+        targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in targets}
         if not targets_conf:
             log.error(u'No targets configured (repository "{}")'.format(repo_alias))
             return 1
@@ -153,13 +157,13 @@ def run_push_command(args, conf, repo, repo_alias, repo_conf, repo_url):
             remotes.extend(target_conf.values())
     remotes.append('origin')
     remotes = sorted(set(remotes))
-    return repository.push(dry_run=args.dry_run, remotes=remotes)
+    return repository.push(dry_run=dry_run, remotes=remotes)
 
 
-def run_targets_command(args, conf, repo, repo_alias, repo_conf, repo_url):
-    targets = repo_conf.get('targets')
-    if not targets:
-        log.error(u'Targets are not configured (repository "{}").'.format(repo_alias))
-        return 1
-    log.info(u'Targets: <all>, {} (repository "{}")'.format(u', '.join(targets.keys()), repo_alias))
-    return 0
+def validate_targets(targets, repo_targets):
+    for target_name in targets:
+        if target_name != 'all' and target_name not in repo_targets:
+            log.error(u'Invalid target name: {} (repository targets: {})'.format(
+                target_name, u', '.join(repo_targets.keys())))
+            return False
+    return True
