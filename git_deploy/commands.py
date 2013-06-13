@@ -76,7 +76,7 @@ def run_command(args):
     elif command == 'ssh':
         hosts = args.sub_args[1:]
         if len(hosts) != 1:
-            log.error(u'Please specify one host only.')
+            log.error(u'Please specify one host only (available: {}).'.format(u', '.join(sorted(repo_conf['hosts']))))
             return 1
         command_kwargs['host_name'] = hosts[0]
         return run_ssh_command(**command_kwargs)
