@@ -62,6 +62,9 @@ def run_command(args):
         }
     command = args.sub_args[0]
     if command == 'conf':
+        if len(args.sub_args[1:]) > 0:
+            log.error(u'The conf command takes no arguments.')
+            return 1
         log.info(pprint.pformat(repo_conf))
         return 0
     elif command == 'pull':
@@ -70,6 +73,13 @@ def run_command(args):
     elif command == 'push':
         command_kwargs['targets'] = args.sub_args[1:]
         return run_push_command(**command_kwargs)
+    elif command == 'ssh':
+        hosts = args.sub_args[1:]
+        if len(hosts) != 1:
+            log.error(u'Please specify one host only.')
+            return 1
+        command_kwargs['host_name'] = hosts[0]
+        return run_ssh_command(**command_kwargs)
     else:
         # Sync command.
         command_kwargs['targets'] = args.sub_args
@@ -158,6 +168,21 @@ def run_push_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targe
     remotes.append('origin')
     remotes = sorted(set(remotes))
     return repository.push(dry_run=dry_run, remotes=remotes)
+
+
+def run_ssh_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, host_name):
+    log.debug(u'Connecting to host {}'.format(host_name))
+    command_args = ['ssh', '-t']
+    host_conf = repo_conf['hosts'].get(host_name)
+    if not host_conf:
+        log.error(u'Host "{}" not configured (repository "{}").'.format(host_name, repo_alias))
+        return 1
+    if host_conf['user'] is not None:
+        command_args.extend(['-l', host_conf['user']])
+    command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], u'${SHELL:-bash}')])
+    log.debug(u'command_args={}'.format(command_args))
+    subprocess.call(command_args)
+    return 0
 
 
 def validate_targets(targets, repo_targets):
