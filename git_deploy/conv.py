@@ -23,12 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import logging
-
 from biryani1.baseconv import empty_to_none, not_none, pipe, test_in, struct, uniform_mapping, uniform_sequence
-
-
-log = logging.getLogger(__name__)
 
 
 # Level 1 converters.
