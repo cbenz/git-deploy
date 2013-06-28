@@ -63,7 +63,7 @@ def push(remotes=None, dry_run=False):
         remotes = ['origin']
     for remote in remotes:
         log.info(u'== push to remote "{}"'.format(remote))
-        command_args = ['git', 'push', remote]
+        command_args = ['git', 'push', '--all', remote]
         log.info(u'= command: {}'.format(u' '.join(command_args)))
         if not dry_run:
             subprocess.call(command_args)
