@@ -39,22 +39,23 @@ def get_conf(config_dir_path):
         return None
     conf_dicts = []
     for config_file_path in glob.iglob(os.path.join(config_dir_path, '*.json')):
-        log.debug(u'config_file_path = {}'.format(config_file_path))
+        log.debug(u'config_file_path = {path}'.format(path=config_file_path))
         with open(config_file_path) as config_file:
             config_file_str = config_file.read()
         try:
             conf_dict = json.loads(config_file_str)
         except ValueError, exc:
-            log.error(u'Failed to decode repository JSON configuration for file "{}": {}'.format(
-                config_file_path, unicode(exc)))
+            log.error(u'Failed to decode repository JSON configuration for file "{path}": {exc}'.format(
+                exc=unicode(exc), path=config_file_path))
             return None
         conf_data, errors = conv.json_values_to_conf(conf_dict)
         if errors is not None:
-            log.error(u'Repository configuration errors for file "{}": {}'.format(config_file_path, errors))
+            log.error(u'Repository configuration errors for file "{path}": {errors}'.format(
+                errors=errors, path=config_file_path))
             return None
         conf_dicts.append(conf_data)
     conf = merge_conf_dicts(conf_dicts)
-    log.debug(u'conf = {}'.format(conf))
+    log.debug(u'conf = {conf}'.format(conf=conf))
     return conf
 
 
@@ -62,7 +63,7 @@ def get_repo_alias_and_conf(conf, repo_url):
     if conf['repositories']:
         for repo_alias, repo_conf in conf['repositories'].iteritems():
             if repo_conf['url'] == repo_url:
-                log.debug(u'repo_alias = {}, repo_conf = {}'.format(repo_alias, repo_conf))
+                log.debug(u'repo_alias = {repo}, repo_conf = {conf}'.format(conf=repo_conf, repo=repo_alias))
                 return repo_alias, repo_conf
     return None, None
 

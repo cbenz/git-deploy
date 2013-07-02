@@ -34,23 +34,24 @@ log = logging.getLogger(__name__)
 
 
 def run_command(args):
-    log.debug(u'run_command: args = {}'.format(args))
+    log.debug(u'run_command: args = {args}'.format(args=args))
     repo = repository.get_repo()
     if repo is None:
         log.error(u'Not a git repository (sub-)directory.')
         return 1
     repo_url = repository.get_repo_url(repo=repo, origin_remote_name=args.origin_remote_name)
     if not repo_url:
-        log.error(u'Remote "{}" not found in .git/config for this repository.'.format(args.origin_remote_name))
+        log.error(u'Remote "{remote}" not found in .git/config for this repository.'.format(
+            remote=args.origin_remote_name))
         return 1
     conf = configuration.get_conf(config_dir_path=args.config_dir)
     if not conf:
-        log.error(u'Could not load configuration from directory "{}".'.format(args.config_dir))
+        log.error(u'Could not load configuration from directory "{config_dir}".'.format(config_dir=args.config_dir))
         return 1
     repo_alias, repo_conf = configuration.get_repo_alias_and_conf(conf, repo_url)
     if not repo_conf:
         log.error(u'This repository is not managed by git-deploy. '
-            'Hint: add its configuration to a JSON file in {}'.format(args.config_dir))
+            'Hint: add its configuration to a JSON file in {config_dir}'.format(config_dir=args.config_dir))
         return 1
     command_kwargs = {
         'conf': conf,
@@ -76,7 +77,8 @@ def run_command(args):
     elif command == 'ssh':
         hosts = args.sub_args[1:]
         if len(hosts) != 1:
-            log.error(u'Please specify one host only (available: {}).'.format(u', '.join(sorted(repo_conf['hosts']))))
+            log.error(u'Please specify one host only (configured: {hosts}).'.format(
+                hosts=u', '.join(sorted(repo_conf['hosts']))))
             return 1
         command_kwargs['host_name'] = hosts[0]
         return run_ssh_command(**command_kwargs)
@@ -96,7 +98,7 @@ def run_hooks(dry_run, hooks, hooks_conf, host_name):
         if hook_conf['user']:
             command_args.extend(['-l', hook_conf['user']])
         command_args.append(hook_conf['command'])
-        log.info(u'= command ("after" hook): {}'.format(u' '.join(command_args)))
+        log.info(u'= command ("after" hook): {command}'.format(command=u' '.join(command_args)))
         if not dry_run:
             return_code = subprocess.call(command_args)
             if return_code != 0:
@@ -112,20 +114,21 @@ def run_pull_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targe
     targets_conf = repo_conf['targets'] if 'all' in targets else \
         {target_name: repo_conf['targets'][target_name] for target_name in targets}
     if not targets_conf:
-        log.error(u'No targets configured (repository "{}")'.format(repo_alias))
+        log.error(u'repository "{repo}": no targets configured'.format(repo=repo_alias))
         return 1
     targets_host_names = []
     for target_name, target_conf in targets_conf.iteritems():
         if not target_conf:
-            log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
+            log.error(u'repository "{repo}": target "{target}" not configured'.format(
+                repo=repo_alias, target=target_name))
             return 1
         targets_host_names.extend(target_conf.keys())
     targets_host_names = sorted(set(targets_host_names))
     for host_name in targets_host_names:
-        log.info(u'== pull from host "{}"'.format(host_name))
+        log.info(u'== pull from host "{host}"'.format(host=host_name))
         host_conf = repo_conf['hosts'].get(host_name)
         if not host_conf:
-            log.error(u'Host "{}" not configured (repository "{}").'.format(host_name, repo_alias))
+            log.error(u'repository "{repo}": host "{host}" not configured'.format(host=host_name, repo=repo_alias))
             return 1
         # before hooks
         if host_conf['hooks'] is not None and host_conf['hooks']['before']:
@@ -157,12 +160,13 @@ def run_push_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targe
         # Build remotes from repo targets.
         targets_conf = {target_name: repo_conf['targets'][target_name] for target_name in targets}
         if not targets_conf:
-            log.error(u'No targets configured (repository "{}")'.format(repo_alias))
+            log.error(u'repository "{repo}": no targets configured'.format(repo=repo_alias))
             return 1
         remotes = []
         for target_name, target_conf in targets_conf.iteritems():
             if not target_conf:
-                log.error(u'Target "{}" is not configured (repository "{}").'.format(target_name, repo_alias))
+                log.error(u'repository "{repo}": target "{target}" not configured'.format(
+                    repo=repo_alias, target=target_name))
                 return 1
             remotes.extend(target_conf.values())
     remotes.append('origin')
@@ -171,16 +175,17 @@ def run_push_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targe
 
 
 def run_ssh_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, host_name):
-    log.debug(u'Connecting to host {}'.format(host_name))
+    log.debug(u'Connecting to host {host}'.format(host=host_name))
     command_args = ['ssh', '-t']
     host_conf = repo_conf['hosts'].get(host_name)
     if not host_conf:
-        log.error(u'Host "{}" not configured (repository "{}").'.format(host_name, repo_alias))
+        log.error(u'repository "{repo}": host "{host}" not configured (configured: {hosts})'.format(
+            host=host_name, hosts=u', '.join(sorted(repo_conf['hosts'])), repo=repo_alias))
         return 1
     if host_conf['user'] is not None:
         command_args.extend(['-l', host_conf['user']])
-    command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], u'${SHELL:-bash}')])
-    log.debug(u'command_args={}'.format(command_args))
+    command_args.extend([host_name, 'cd {path}; {shell}'.format(path=host_conf['path'], shell=u'${SHELL:-bash}')])
+    log.debug(u'command_args={command_args}'.format(command_args=command_args))
     subprocess.call(command_args)
     return 0
 
@@ -188,7 +193,7 @@ def run_ssh_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, host_n
 def validate_targets(targets, repo_targets):
     for target_name in targets:
         if target_name != 'all' and target_name not in repo_targets:
-            log.error(u'Invalid target name: {} (repository targets: {})'.format(
-                target_name, u', '.join(repo_targets.keys())))
+            log.error(u'Invalid target name: {target} (configured: {targets})'.format(
+                target=target_name, targets=u', '.join(repo_targets.keys())))
             return False
     return True

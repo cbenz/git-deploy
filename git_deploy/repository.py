@@ -41,7 +41,8 @@ def get_repo():
 
 
 def get_repo_url(repo, origin_remote_name):
-    return repo.remotes[origin_remote_name].config_reader.config.get('remote "{}"'.format(origin_remote_name), 'url')
+    return repo.remotes[origin_remote_name].config_reader.config.get('remote "{remote}"'.format(
+        remote=origin_remote_name), 'url')
 
 
 def pull(host_name, repo_conf, dry_run=False):
@@ -51,8 +52,8 @@ def pull(host_name, repo_conf, dry_run=False):
         command_args.extend(['-l', host_conf['user']])
     pull_command = repo_conf['commands']['pull'] if repo_conf['commands'] and repo_conf['commands'].get('pull') \
         else u'git pull'
-    command_args.extend([host_name, 'cd {}; {}'.format(host_conf['path'], pull_command)])
-    log.info(u'= command: {}'.format(u' '.join(command_args)))
+    command_args.extend([host_name, 'cd {path}; {command}'.format(command=pull_command, path=host_conf['path'])])
+    log.info(u'= command: {command}'.format(command=u' '.join(command_args)))
     if not dry_run:
         subprocess.call(command_args)
     return 0
@@ -62,9 +63,9 @@ def push(remotes=None, dry_run=False):
     if remotes is None:
         remotes = ['origin']
     for remote in remotes:
-        log.info(u'== push to remote "{}"'.format(remote))
+        log.info(u'== push to remote "{remote}"'.format(remote=remote))
         command_args = ['git', 'push', '--all', remote]
-        log.info(u'= command: {}'.format(u' '.join(command_args)))
+        log.info(u'= command: {command}'.format(command=u' '.join(command_args)))
         if not dry_run:
             subprocess.call(command_args)
     return 0
