@@ -37,6 +37,9 @@ setup(
     author=u'Christophe Benz',
     author_email=u'cbenz@easter-eggs.com',
     description=doc_lines[0],
+    entry_points={
+        'console_scripts': 'git-deploy = git_deploy.cli:main',
+        },
     include_package_data=True,
     install_requires=[
         'Biryani1 >= 0.9dev',
