@@ -50,8 +50,10 @@ def run_command(args):
         return 1
     repo_alias, repo_conf = configuration.get_repo_alias_and_conf(conf, repo_url)
     if not repo_conf:
-        log.error(u'This repository is not managed by git-deploy. '
-            'Hint: add its configuration to a JSON file in {config_dir}'.format(config_dir=args.config_dir))
+        log.error(
+            u'This repository is not managed by git-deploy. '
+            u'Hint: add its configuration to a JSON file in {config_dir}'.format(config_dir=args.config_dir)
+            )
         return 1
     command_kwargs = {
         'conf': conf,
@@ -132,8 +134,8 @@ def run_pull_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targe
             return 1
         # before hooks
         if host_conf['hooks'] is not None and host_conf['hooks']['before']:
-            return_code = run_hooks(dry_run=dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'],
-                host_name=host_name)
+            return_code = run_hooks(
+                dry_run=dry_run, hooks=host_conf['hooks']['before'], hooks_conf=conf['hooks'], host_name=host_name)
             if return_code != 0:
                 log.error(u'Error running command.')
         # pull command
@@ -142,8 +144,8 @@ def run_pull_command(conf, dry_run, repo, repo_alias, repo_conf, repo_url, targe
             log.error(u'Error running command.')
         # after hooks
         if host_conf['hooks'] is not None and host_conf['hooks']['after']:
-            return_code = run_hooks(dry_run=dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'],
-                host_name=host_name)
+            return_code = run_hooks(
+                dry_run=dry_run, hooks=host_conf['hooks']['after'], hooks_conf=conf['hooks'], host_name=host_name)
             if return_code != 0:
                 log.error(u'Error running command.')
     return 0
