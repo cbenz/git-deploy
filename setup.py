@@ -51,7 +51,7 @@ setup(
     long_description='\n'.join(doc_lines[2:]),
     name=u'GitDeploy',
     packages=find_packages(),
-#    url=u'http://',
+    url=u'https://github.com/cbenz/git-deploy',
     version='0.1',
     zip_safe=False,
     )
