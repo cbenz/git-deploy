@@ -52,6 +52,6 @@ setup(
     name=u'GitDeploy',
     packages=find_packages(),
     url=u'https://github.com/cbenz/git-deploy',
-    version='0.1',
+    version='0.1dev',
     zip_safe=False,
     )
