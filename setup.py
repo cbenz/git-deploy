@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'Biryani1 >= 0.9dev',
-        'GitPython >= 0.3.2',
+        'GitPython >= 0.3.2.RC1',
         'pyxdg >= 0.19',
         ],
     keywords='git deploy targets remotes ssh',
