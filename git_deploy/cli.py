@@ -48,3 +48,8 @@ def main():
         level=logging.DEBUG if args.verbose else logging.INFO,
         )
     return commands.run_command(args)
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main())
