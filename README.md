@@ -13,42 +13,31 @@ Also it provides hooks executed before and after pull (for ex. to reload Apache)
 Usage
 -----
 
-After configuring your git repositories, git-deploy will push your changes to the repositories needed to be reached by
-given targets then it will pull from the server(s) corresponding to those targets.
 
-    $ git deploy <target>
+1. Intall **Biryani** dependency
 
-Examples:
+        $ pip install biryani1
 
-    $ git deploy prod
-    $ git deploy all
+    or from sources from the "biryani1" branch:
+    URL: https://pypi.python.org/pypi/Biryani
+    
+2. Install Python egg
 
-Show repository config:
+    Register python egg to the user or the system, with or without egg dependencies.
+    This is convinient if you use a GNU/Linux distribution that ships Python packages.
 
-    $ git deploy conf
+        $ python setup.py develop [--user] [--no-deps]
 
-
-Installation
-------------
-
-Register python egg to the user or the system, with or without egg dependencies.
-This is convinient if you use a GNU/Linux distribution that ships Python packages.
-
-    $ python setup.py develop [--user] [--no-deps]
-
-For instance with Debian GNU/Linux (waiting for a real .deb):
-
-    $ python setup.py develop --user --no-deps
-    $ su -
-    # aptitude install python-git python-xdg
-
-Biryani may be installed from sourcesm from the "biryani1" branch.
-URL: https://pypi.python.org/pypi/Biryani
-
-Then install the script to your "bin" directory:
-
-    $ ln -s $PWD/scripts/git-deploy ~/.local/bin
-
+    For instance with Debian GNU/Linux (waiting for a real .deb):
+    
+        $ python setup.py develop --user --no-deps
+        $ su -
+        # aptitude install python-git python-xdg
+    
+3. Install script into your "bin" directory:
+    
+        $ ln -s $PWD/scripts/git-deploy ~/.local/bin
+    
 
 Configuration
 -------------
